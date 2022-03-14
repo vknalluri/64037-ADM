@@ -1,0 +1,119 @@
+
+---
+title: "Assignment1_Vamsi_Nalluri"
+output:
+  word_document: default
+  html_document: default
+---
+```{r}
+#Clear the Workspace
+rm(list = ls())
+```
+
+## Install the required packages and libraries , as required,  at appropriate chunks.
+
+***
+
+```{r}
+library(ISLR)
+library(dplyr)
+library(glmnet)
+library(caret)
+```
+
+## Loading the  Data from ISLR library (Carseats)
+
+***
+```{r}
+Carseats_Filtered <- Carseats %>% select("Sales", "Price", "Advertising","Population","Age","Income","Education")
+```
+
+***
+## Seperating Sales(Dependent Variable) and Other Data (Independent Variables) 
+
+***
+## Converting the Data into Matrix form : A required step for Glmnet model to work
+
+***
+```{r}
+Carseats_Sales <- Carseats_Filtered$Sales
+Carseats_Other <- data.matrix(Carseats_Filtered[, c(-1)])
+```
+
+
+## Data Pre-Processing: Standardizing the data and displaying the Summary of the Data
+
+***
+```{r}
+preProc <- preProcess(Carseats_Other, method=c("center", "scale"))
+Carseats_Scaled <- predict(preProc,Carseats_Other)
+summary(Carseats_Scaled)
+```
+
+# Build the Lasso Regression Model by default its Lasso Model (if aplha = 1 is not mentioned). By default k fold cross validation is k=10
+
+***
+```{r}
+
+Model <- cv.glmnet(Carseats_Scaled,Carseats_Sales , alpha = 1)
+
+Lambda_Best <- Model$lambda.min
+Lambda_Best
+
+#produce plot of test MSE by lambda value
+plot(Model) 
+```
+
+***
+1.Optimal Lambda value is 0.004305309
+
+***
+
+## Finding the Coefficients for the Best model with the Optimal Lambda
+
+***
+
+```{r}
+Model_Best <- glmnet(Carseats_Scaled,Carseats_Sales, alpha = 1, lambda = Lambda_Best)
+coef(Model_Best)
+```
+
+***
+2.Coefficent of Price is -1.35384596
+
+***
+## Finding the remaining variables with lambda of 0.01 and 0.1
+
+***
+
+```{r}
+Model_Best1 <- glmnet(Carseats_Scaled,Carseats_Sales, alpha = 1, lambda = 0.01)
+coef(Model_Best1)
+Model_Best2 <- glmnet(Carseats_Scaled,Carseats_Sales, alpha = 1, lambda = 0.1)
+coef(Model_Best2)
+```
+
+***
+
+3.With Lambda 0.01 all the variables are remaining But with 0.1 population & Education variables are going out.
+
+  As lambda increases variables will drop.
+
+***
+
+## Best lambda for Elastic Model (alpha=0.6)
+
+***
+
+```{r}
+Model1 <- cv.glmnet(Carseats_Scaled,Carseats_Sales , alpha = 0.6)
+
+Lambda_Best1 <- Model1$lambda.min
+Lambda_Best1
+
+#produce plot of test MSE by lambda value
+plot(Model1) 
+```
+
+***
+4.Optimal Lambda for elastic model is 0.006538062
